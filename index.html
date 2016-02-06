@@ -1,0 +1,91 @@
+<html>
+	<head>
+		<title>Super Cool WebRTC App</title>
+	</head>
+
+	<body>
+		<h1>Web-RTC Demo</h1>
+		<h2>Look in the console for instructions</h2>
+		<label>Your message</label>
+		<input id="message" type="text">
+		<div id="output">
+
+		</div>
+
+		<script src="js/DataChannel.js"></script>
+
+		<script>//code for parameter access taken from http://stackoverflow.com/a/901144/2009336
+			function getParameterByName(name) {
+				name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+				var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+				results = regex.exec(location.search);
+				return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+			}
+		</script>
+
+		<script>			
+			var channel = new DataChannel();
+			var channels = [];
+			var channelId = getParameterByName("id") || undefined;
+
+			var output = document.getElementById('output')
+			var input = document.getElementById('message')
+
+			input.onkeypress = function(e){
+				console.log(e)
+				if(e.which == 13){
+					message(input.value)
+					input.value = ""
+				}
+			}
+
+			if(channelId){
+
+				channel.connect(channelId)
+
+			}
+			else{
+
+				var channelId = makeRoomId()
+				channel.open(channelId)
+				console.log("Room id: " + channelId)
+				console.log("Tell a friend to connect to " + document.URL.substr(0, document.URL.lastIndexOf("/")) + "/?id=" + channelId)
+				addText("Tell a friend to connect to " + document.URL.substr(0, document.URL.lastIndexOf("/")) + "/?id=" + channelId)
+				// window.history.pushState("", "Title", "/?id=" + channelId);
+			}
+
+			console.log("To send messages, type in %cmessage(\"your message\");", "color:green;background:black;")
+
+			function addText(text){
+				var p = document.createElement('p');
+				p.textContent = text;
+				output.appendChild(p);
+			};
+
+			channel.onopen = function (userid) {
+				console.log(userid + " joined")
+				addText(userid + " joined")
+			};
+
+			channel.onmessage = function (message, userid) {
+				console.log(userid + ': ' + message)
+				addText(userid + ': ' + message)
+			};
+
+			channel.onleave = function (userid) {
+				console.log(userid + " left")
+				addText(userid + " left")
+			};
+
+			function makeRoomId(){//generates arbitrary ID to use, hopefully it's unique
+				return Math.random().toString(16).substr(2,5);
+			}
+
+			function message(text){
+				channel.send(text)
+				console.log("You: " + text)
+				addText("You: " + text)
+			}
+		</script>
+	</body>
+</html>
