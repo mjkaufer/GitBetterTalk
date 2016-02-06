@@ -68,8 +68,10 @@
 			};
 
 			channel.onmessage = function (message, userid) {
-				console.log(userid + ': ' + message)
-				addText(userid + ': ' + message)
+				if(typeof message == "string"){
+					console.log(userid + ': ' + message)
+					addText(userid + ': ' + message)	
+				}
 			};
 
 			channel.onleave = function (userid) {
